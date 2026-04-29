@@ -1,35 +1,55 @@
-# Seedbox Installer
+# 🚀 Mamu Seedbox Installer
 
-Simple one-command seedbox setup script.
+One-command installer for a lightweight torrent stack.
 
-## 🚀 Features
+## 📦 Features
 
-- qBittorrent-nox (WebUI)
-- FileBrowser (file manager)
-- rTorrent + ruTorrent
+- qBittorrent (version selectable)
+- FileBrowser (web file manager)
 - autobrr (automation tool)
-- Automatic service setup
-- Firewall rules (UFW)
+- Auto service setup (systemd)
+- Firewall configuration (UFW)
+- Custom ports, username, and password
 
-## ⚡ Installation
+---
 
-Run this command on your VPS:
+##Quick Install
+
+Run this on your VPS:
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/meh/main/install.sh)
+bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/meh/main/install.sh)```
 
-🌐 Access
+What the Script Does
 
-After installation:
+During installation, you will:
 
-qBittorrent → http://YOUR_SERVER_IP:8080
-FileBrowser → http://YOUR_SERVER_IP:8081
-ruTorrent → http://YOUR_SERVER_IP:8082
-autobrr → http://YOUR_SERVER_IP:7474
-🔒 Notes
-Change all default passwords immediately
-Make sure required ports are open
-Recommended to use a firewall and Fail2Ban
+Enter your server IP/domain
+Choose qBittorrent version
+Set WebUI ports
+Set username and password
+Configure FileBrowser and autobrr
+ Access After Installation
+qBittorrent → http://YOUR_IP:PORT
+FileBrowser → http://YOUR_IP:PORT
+autobrr → http://YOUR_IP:PORT
+ Security Notes
+Change passwords immediately after install
+Consider enabling Fail2Ban
+Avoid exposing services publicly without protection
+🧠 Requirements
+Debian / Ubuntu VPS
+Root access
+Open ports for selected services
 ⚠️ Disclaimer
 
-Use at your own risk. This script is provided as-is.
+This script is provided as-is.
+Use it at your own risk.
+
+💡 Roadmap (maybe later)
+Terminal UI menu
+Web dashboard (Swizzin-style)
+More app integrations
+👑 Author
+
+Made by Mamu
