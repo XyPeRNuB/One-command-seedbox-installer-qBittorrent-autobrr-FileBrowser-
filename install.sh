@@ -47,10 +47,9 @@ apt update && apt upgrade -y
 apt install -y curl wget tar ufw ca-certificates python3
 
 mkdir -p /home/seedbox/downloads
-mkdir -p /root/.config/qBittorrent/config
+mkdir -p /root/.config/qBittorrent
 mkdir -p /opt/autobrr
 
-# qBittorrent
 if [ "$QBIT_CHOICE" = "1" ]; then
   echo "Installing qBittorrent 4.6.7 static build..."
   wget -O /usr/local/bin/qbittorrent-nox \
@@ -60,9 +59,29 @@ else
   echo "Installing Debian default qBittorrent..."
   apt install -y qbittorrent-nox
 fi
+
 QBIT_BIN=$(command -v qbittorrent-nox)
 
-# Hash password
+cat > /etc/systemd/system/qbittorrent.service <<EOF
+[Unit]
+Description=qBittorrent-nox
+After=network.target
+
+[Service]
+User=root
+ExecStart=$QBIT_BIN --webui-port=$QBIT_PORT
+Restart=always
+LimitNOFILE=100000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl start qbittorrent || true
+sleep 3
+systemctl stop qbittorrent || true
+
 QBIT_HASH=$(python3 - <<EOF
 import hashlib, os, base64
 password = "$QBIT_PASS"
@@ -72,7 +91,7 @@ print("@ByteArray(" + base64.b64encode(salt).decode() + ":" + base64.b64encode(d
 EOF
 )
 
-cat > /root/.config/qBittorrent/config/qBittorrent.conf <<EOF
+cat > /root/.config/qBittorrent/qBittorrent.conf <<EOF
 [LegalNotice]
 Accepted=true
 
@@ -100,22 +119,6 @@ WebUI\\Password_PBKDF2=$QBIT_HASH
 Downloads\\SavePath=/home/seedbox/downloads/
 EOF
 
-cat > /etc/systemd/system/qbittorrent.service <<EOF
-[Unit]
-Description=qBittorrent-nox
-After=network.target
-
-[Service]
-User=root
-ExecStart=$QBIT_BIN --webui-port=$QBIT_PORT
-Restart=always
-LimitNOFILE=100000
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# FileBrowser
 echo "Installing FileBrowser..."
 curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
 
@@ -133,7 +136,6 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-# autobrr
 echo "Installing autobrr..."
 cd /opt/autobrr
 
@@ -150,7 +152,6 @@ fi
 echo "Downloading: $AUTOBRR_URL"
 
 wget -O autobrr.tar.gz "$AUTOBRR_URL"
-
 tar -xzf autobrr.tar.gz
 chmod +x autobrr
 ln -sf /opt/autobrr/autobrr /usr/local/bin/autobrr
@@ -169,7 +170,6 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-# Firewall
 ufw allow OpenSSH
 ufw allow "$QBIT_PORT"
 ufw allow "$FB_PORT"
@@ -177,7 +177,6 @@ ufw allow "$AUTOBRR_PORT"
 ufw allow 50000
 ufw --force enable
 
-# Start services
 systemctl daemon-reload
 systemctl enable qbittorrent filebrowser autobrr
 systemctl restart qbittorrent filebrowser autobrr
@@ -190,5 +189,6 @@ echo "qBittorrent: http://$SERVER_IP:$QBIT_PORT"
 echo "FileBrowser: http://$SERVER_IP:$FB_PORT"
 echo "autobrr: http://$SERVER_IP:$AUTOBRR_PORT"
 echo ""
-echo "Username: $QBIT_USER"
+echo "qBittorrent username: $QBIT_USER"
+echo "qBittorrent password: the one you entered"
 echo "===================================="
