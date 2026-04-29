@@ -1,27 +1,22 @@
 # Mamu Seedbox Installer
 
-Run this on your VPS:
-
-
-```bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/meh/main/install.sh)```
-
 One-command installer for a lightweight torrent stack.
 
-## Features
+## Quick Install
 
-- qBittorrent (version selectable)
-- FileBrowser (web file manager)
-- autobrr (automation tool)
-- Automatic service setup (systemd)
-- Firewall configuration (UFW)
-- Custom ports, username, and password
+Run this on your VPS:
 
----
-
-###What the Script Does
-
-####During installation, you will:
-
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/meh/main/install.sh)
+Features
+qBittorrent (version selectable)
+FileBrowser (web file manager)
+autobrr (automation tool)
+Automatic service setup (systemd)
+Firewall configuration (UFW)
+Custom ports, username, and password
+What the Script Does
+During installation, you will:
 Enter your server IP or domain
 Choose qBittorrent version
 Set WebUI ports
@@ -44,13 +39,6 @@ Disclaimer
 This script is provided as-is.
 Use it at your own risk.
 
-Roadmap
-Terminal UI menu
-Web dashboard
-More app integrations
 Author
 
 Mamu
-
-
-
