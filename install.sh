@@ -60,6 +60,7 @@ else
   echo "Installing Debian default qBittorrent..."
   apt install -y qbittorrent-nox
 fi
+QBIT_BIN=$(command -v qbittorrent-nox)
 
 # Hash password
 QBIT_HASH=$(python3 - <<EOF
@@ -76,26 +77,27 @@ cat > /root/.config/qBittorrent/config/qBittorrent.conf <<EOF
 Accepted=true
 
 [Preferences]
-Connection\PortRangeMin=50000
-Connection\PortRangeMax=50000
-Connection\UPnP=true
-Connection\GlobalDLLimit=0
-Connection\GlobalUPLimit=0
-Connection\GlobalDLLimitAlt=0
-Connection\GlobalUPLimitAlt=0
-Connection\MaxConnecs=-1
-Connection\MaxConnecsPerTorrent=-1
-Connection\MaxUploads=-1
-Connection\MaxUploadsPerTorrent=-1
-Bittorrent\DHT=false
-Bittorrent\PeX=false
-Bittorrent\LSD=false
-Bittorrent\QueueingSystemEnabled=false
-Bittorrent\uTP=false
-WebUI\Port=$QBIT_PORT
-WebUI\Username=$QBIT_USER
-WebUI\Password_PBKDF2=$QBIT_HASH
-Downloads\SavePath=/home/seedbox/downloads/
+Connection\\PortRangeMin=50000
+Connection\\PortRangeMax=50000
+Connection\\UPnP=true
+Connection\\GlobalDLLimit=0
+Connection\\GlobalUPLimit=0
+Connection\\GlobalDLLimitAlt=0
+Connection\\GlobalUPLimitAlt=0
+Connection\\MaxConnecs=-1
+Connection\\MaxConnecsPerTorrent=-1
+Connection\\MaxUploads=-1
+Connection\\MaxUploadsPerTorrent=-1
+Bittorrent\\DHT=false
+Bittorrent\\PeX=false
+Bittorrent\\LSD=false
+Bittorrent\\QueueingSystemEnabled=false
+Bittorrent\\uTP=false
+WebUI\\Enabled=true
+WebUI\\Port=$QBIT_PORT
+WebUI\\Username=$QBIT_USER
+WebUI\\Password_PBKDF2=$QBIT_HASH
+Downloads\\SavePath=/home/seedbox/downloads/
 EOF
 
 cat > /etc/systemd/system/qbittorrent.service <<EOF
@@ -105,7 +107,7 @@ After=network.target
 
 [Service]
 User=root
-ExecStart=/usr/local/bin/qbittorrent-nox --webui-port=$QBIT_PORT
+ExecStart=$QBIT_BIN --webui-port=$QBIT_PORT
 Restart=always
 LimitNOFILE=100000
 
