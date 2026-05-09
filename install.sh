@@ -76,20 +76,27 @@ clear
 echo -e "${CYAN}${BOLD}"
 cat << 'BANNER'
 
-  ███╗   ███╗ █████╗ ███╗   ███╗██╗   ██╗
-  ████╗ ████║██╔══██╗████╗ ████║██║   ██║
-  ██╔████╔██║███████║██╔████╔██║██║   ██║
-  ██║╚██╔╝██║██╔══██║██║╚██╔╝██║██║   ██║
-  ██║ ╚═╝ ██║██║  ██║██║ ╚═╝ ██║╚██████╔╝
-  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝
-   Seedbox Installer v2.0
-
+██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
+██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
+██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
+██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
+╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
+ ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝
 BANNER
 echo -e "${NC}"
+echo -e "${CYAN}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BOLD}       Seedbox Installer v2.0  ·  Debian/Ubuntu  ·  ARM64 + x86_64${NC}"
+echo -e "${CYAN}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
 echo -e "  ${DIM}OS: $PRETTY_NAME${NC}"
 echo -e "  ${DIM}Arch: $ARCH_LABEL  |  CPU: ${NCORES} cores  |  RAM: ${TOTAL_RAM_MB}MB${NC}"
 echo ""
-sleep 1
+echo -e "  ${CYAN}Welcome to Mamu Seedbox Setup!${NC}"
+echo -e "  ${DIM}This will install and configure your seedbox environment.${NC}"
+echo ""
+echo -ne "  ${BOLD}Press Enter to get started...${NC}"
+read -r
+clear
 
 # ============================================================
 #  WHIPTAIL UI — CREDENTIALS
@@ -117,16 +124,41 @@ DOWNLOAD_DIR=$(whiptail --inputbox \
     --title "Mamu Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
 
 # ============================================================
+#  DETECT ALREADY INSTALLED APPS
+# ============================================================
+QBT_INSTALLED=0; RT_INSTALLED=0; AB_INSTALLED=0
+JF_INSTALLED=0; FB_INSTALLED=0
+
+command -v qbittorrent-nox &>/dev/null && QBT_INSTALLED=1
+command -v rtorrent &>/dev/null        && RT_INSTALLED=1
+command -v autobrr &>/dev/null         && AB_INSTALLED=1
+systemctl is-active --quiet jellyfin 2>/dev/null && JF_INSTALLED=1
+command -v filebrowser &>/dev/null     && FB_INSTALLED=1
+
+# Build status labels
+qbt_label="qBittorrent-nox (torrent client)"
+rt_label="rTorrent + ruTorrent (web UI)"
+ab_label="autobrr (autodl/racing)"
+jf_label="Jellyfin (media server)"
+fb_label="FileBrowser (file manager)"
+
+[[ $QBT_INSTALLED -eq 1 ]] && qbt_label="qBittorrent-nox [INSTALLED]"
+[[ $RT_INSTALLED  -eq 1 ]] && rt_label="rTorrent + ruTorrent [INSTALLED]"
+[[ $AB_INSTALLED  -eq 1 ]] && ab_label="autobrr [INSTALLED]"
+[[ $JF_INSTALLED  -eq 1 ]] && jf_label="Jellyfin [INSTALLED]"
+[[ $FB_INSTALLED  -eq 1 ]] && fb_label="FileBrowser [INSTALLED]"
+
+# ============================================================
 #  WHIPTAIL UI — APP SELECTION (checkbox style like swizzin)
 # ============================================================
 APPS=$(whiptail --checklist \
-    "Select apps to install:\n(Space to select, Enter to confirm)" \
-    22 60 10 \
-    "qbittorrent"  "qBittorrent-nox (torrent client)"   OFF \
-    "rtorrent"     "rTorrent + ruTorrent (web UI)"       OFF \
-    "autobrr"      "autobrr (autodl/racing)"             OFF \
-    "jellyfin"     "Jellyfin (media server)"             OFF \
-    "filebrowser"  "FileBrowser (file manager)"          OFF \
+    "Select apps to install:\n[INSTALLED] = already on this system, will be skipped\n(Space to select, Enter to confirm)" \
+    24 65 10 \
+    "qbittorrent"  "$qbt_label"                          OFF \
+    "rtorrent"     "$rt_label"                           OFF \
+    "autobrr"      "$ab_label"                           OFF \
+    "jellyfin"     "$jf_label"                           OFF \
+    "filebrowser"  "$fb_label"                           OFF \
     "tuning"       "Kernel tuning (BBR + optimizations)" ON  \
     "swap"         "Create 4GB swapfile"                 ON  \
     --title "Mamu Seedbox — Apps" 3>&1 1>&2 2>&3) || error "Cancelled."
@@ -143,10 +175,17 @@ INSTALL_JF=0; INSTALL_FB=0; DO_TUNING=0; DO_SWAP=0
 [[ "$APPS" == *"tuning"*       ]] && DO_TUNING=1
 [[ "$APPS" == *"swap"*         ]] && DO_SWAP=1
 
+# ── Skip already installed apps ──────────────────────────────
+[[ $INSTALL_QBT -eq 1 && $QBT_INSTALLED -eq 1 ]] && { warn "qBittorrent already installed — skipping."; INSTALL_QBT=0; }
+[[ $INSTALL_RT  -eq 1 && $RT_INSTALLED  -eq 1 ]] && { warn "rTorrent already installed — skipping."; INSTALL_RT=0; }
+[[ $INSTALL_AB  -eq 1 && $AB_INSTALLED  -eq 1 ]] && { warn "autobrr already installed — skipping."; INSTALL_AB=0; }
+[[ $INSTALL_JF  -eq 1 && $JF_INSTALLED  -eq 1 ]] && { warn "Jellyfin already installed — skipping."; INSTALL_JF=0; }
+[[ $INSTALL_FB  -eq 1 && $FB_INSTALLED  -eq 1 ]] && { warn "FileBrowser already installed — skipping."; INSTALL_FB=0; }
+
 # ── Nothing selected ─────────────────────────────────────────
 if [[ $INSTALL_QBT -eq 0 && $INSTALL_RT -eq 0 && $INSTALL_AB -eq 0 && \
       $INSTALL_JF -eq 0 && $INSTALL_FB -eq 0 && $DO_TUNING -eq 0 ]]; then
-    whiptail --msgbox "Nothing selected. Exiting." 8 40 --title "Mamu Seedbox"
+    whiptail --msgbox "Nothing new to install. Exiting." 8 45 --title "Mamu Seedbox"
     exit 0
 fi
 
@@ -531,6 +570,197 @@ RemainAfterExit=true
 WantedBy=multi-user.target
 BOOTSVC
 systemctl enable boot-script.service >/dev/null 2>&1
+
+# ── NIC ring buffer (more packets buffered before drop) ──────
+_tune_ring_buffer() {
+    for iface in $(ls /sys/class/net/ | grep -E '^(eth|ens|eno|enp|venet)'); do
+        MAX_RX=$(ethtool -g "$iface" 2>/dev/null | awk '/^Pre-set/{getline; print $2}' | head -1)
+        if [[ -n "$MAX_RX" && "$MAX_RX" -gt 0 ]]; then
+            ethtool -G "$iface" rx "$MAX_RX" tx "$MAX_RX" 2>/dev/null || true
+        fi
+    done
+}
+run_step "Setting NIC ring buffer to maximum" _tune_ring_buffer
+
+# ── IRQ affinity — spread NIC interrupts across CPU cores ────
+_tune_irq_affinity() {
+    # Get all network IRQs
+    for iface in $(ls /sys/class/net/ | grep -E '^(eth|ens|eno|enp|venet)'); do
+        IRQ_LIST=$(grep "${iface}" /proc/interrupts 2>/dev/null | awk -F: '{print $1}' | tr -d ' ')
+        CPU_COUNT=$(nproc)
+        CPU_MASK=1
+        for irq in $IRQ_LIST; do
+            echo "$CPU_MASK" > /proc/irq/${irq}/smp_affinity 2>/dev/null || true
+            # Rotate mask to next CPU
+            CPU_MASK=$(( (CPU_MASK * 2) % (2**CPU_COUNT) ))
+            [[ $CPU_MASK -eq 0 ]] && CPU_MASK=1
+        done
+    done
+}
+run_step "Setting IRQ affinity across CPU cores" _tune_irq_affinity
+
+# ── CPU governor — force performance mode ────────────────────
+_tune_cpu_governor() {
+    if [[ -d /sys/devices/system/cpu/cpu0/cpufreq ]]; then
+        for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+            echo "performance" > "$cpu" 2>/dev/null || true
+        done
+        # Persist via cpufrequtils if available
+        apt-get install -y -qq cpufrequtils 2>/dev/null || true
+        if command -v cpufreq-set &>/dev/null; then
+            for i in $(seq 0 $(($(nproc)-1))); do
+                cpufreq-set -c $i -g performance 2>/dev/null || true
+            done
+        fi
+    fi
+}
+run_step "Setting CPU governor to performance mode" _tune_cpu_governor
+
+# ── Disk read-ahead — faster piece reading during seeding ────
+_tune_readahead() {
+    DISK=$(lsblk -d -o NAME,TYPE | awk '\$2=="disk"{print \$1}' | head -1)
+    if [[ -n "\$DISK" ]]; then
+        # Set read-ahead to 4MB (8192 x 512 bytes)
+        blockdev --setra 8192 /dev/\${DISK} 2>/dev/null || true
+        # Persist via udev
+        cat >> /etc/udev/rules.d/60-io-scheduler.rules << UDEV2
+ACTION=="add|change", KERNEL=="vd[a-z]|sd[a-z]|nvme[0-9]n[0-9]", RUN+="/sbin/blockdev --setra 8192 /dev/%k"
+UDEV2
+    fi
+}
+run_step "Setting disk read-ahead to 4MB" _tune_readahead
+
+# ── BDIX peer tuning ─────────────────────────────────────────
+# BDIX = Bangladesh Internet Exchange
+# Local peering IPs get optimized routing for max throughput
+_tune_bdix() {
+    # BDIX IP ranges (common Bangladeshi ISP peering ranges)
+    BDIX_RANGES=(
+        "103.4.0.0/16"      # BDIX core
+        "103.12.0.0/16"     # BD ISPs
+        "103.16.0.0/16"
+        "103.26.0.0/16"
+        "103.48.0.0/16"
+        "103.56.0.0/16"
+        "103.68.0.0/16"
+        "103.72.0.0/16"
+        "103.80.0.0/16"
+        "103.92.0.0/16"
+        "103.100.0.0/16"
+        "103.108.0.0/16"
+        "103.120.0.0/16"
+        "103.132.0.0/16"
+        "103.156.0.0/16"
+        "103.168.0.0/16"
+        "103.196.0.0/16"
+        "103.228.0.0/16"
+        "202.4.96.0/20"     # BTTB/BTCL
+        "202.84.0.0/16"     # BD legacy ranges
+        "202.134.0.0/16"
+        "210.4.64.0/19"
+        "27.147.128.0/17"   # Grameenphone
+        "58.145.176.0/20"   # BDCOM
+        "103.7.248.0/22"    # Carnival Internet
+        "103.11.0.0/22"     # Dhaka Fiber Net
+        "103.15.248.0/22"
+        "103.17.200.0/22"
+        "103.23.160.0/22"
+        "103.27.220.0/22"
+        "103.29.44.0/22"
+        "103.31.232.0/22"
+        "103.35.108.0/22"
+        "103.39.48.0/22"
+        "103.41.216.0/22"   # Link3 Technologies
+        "103.43.240.0/22"
+        "103.47.132.0/22"
+        "103.51.68.0/22"
+        "103.53.44.0/22"
+        "103.55.68.0/22"
+        "103.57.16.0/22"
+        "103.61.192.0/22"
+        "103.63.196.0/22"
+    )
+
+    DEFAULT_GW=$(ip route | awk '/^default/{print \$3}' | head -1)
+    DEFAULT_IF=$(ip route | awk '/^default/{print \$5}' | head -1)
+
+    if [[ -n "$DEFAULT_GW" && -n "\$DEFAULT_IF" ]]; then
+        for range in "${BDIX_RANGES[@]}"; do
+            # Add routes with high initcwnd for BDIX ranges (fast local peering)
+            ip route add "$range" via "$DEFAULT_GW" dev "$DEFAULT_IF"                 initcwnd 64 initrwnd 64 2>/dev/null || true
+        done
+    fi
+
+    # Extra sysctl tweaks for low-latency local peering
+    sysctl -w net.ipv4.tcp_low_latency=1      2>/dev/null || true
+    sysctl -w net.ipv4.route.gc_timeout=100   2>/dev/null || true
+
+    # Persist BDIX sysctl
+    cat >> /etc/sysctl.d/99-seedbox.conf << BDIXSYSCTL
+
+# ── BDIX local peering optimization ────────────────────────
+net.ipv4.route.gc_timeout = 100
+BDIXSYSCTL
+}
+run_step "Applying BDIX peer routing optimization" _tune_bdix
+
+# ── libtorrent advanced tuning (written for qBit) ────────────
+_tune_libtorrent() {
+    mkdir -p /home/${USERNAME}/.config/qBittorrent
+    cat > /home/${USERNAME}/.config/qBittorrent/qBittorrent.conf.libtorrent << LTCONF
+# libtorrent advanced settings for racing
+# Applied via qBittorrent advanced tab on first run
+#
+# These are the key values:
+# aio_threads = NCORES           (async IO threads)
+# send_buffer_watermark = 524288 (512KB send buffer)
+# send_buffer_low_watermark = 10240
+# send_buffer_watermark_factor = 100
+# suggest_mode = 1               (tell peers what you have)
+# choking_algorithm = 0          (fixed slots - best for seeding)
+# seed_choking_algorithm = 1     (fastest upload - round robin)
+# share_ratio_limit = 0          (no ratio limit)
+# peer_turnover = 4
+# peer_turnover_cutoff = 90
+# peer_turnover_interval = 300
+# connection_speed = 500         (500 new connections/sec)
+# mixed_mode_algorithm = 0       (prefer TCP over uTP)
+# allow_multiple_connections_per_ip = true
+LTCONF
+    chown -R "${USERNAME}:${USERNAME}" /home/${USERNAME}/.config/qBittorrent/
+}
+run_step "Writing libtorrent advanced tuning notes" _tune_libtorrent
+
+# ── Update boot script with all new tuning ───────────────────
+cat >> /root/.boot-script.sh << 'BOOTSCRIPT2'
+
+# NIC ring buffer
+for iface in $(ls /sys/class/net/ | grep -E '^(eth|ens|eno|enp|venet)'); do
+    MAX_RX=$(ethtool -g "$iface" 2>/dev/null | awk '/^Pre-set/{getline; print $2}' | head -1)
+    [[ -n "$MAX_RX" && "$MAX_RX" -gt 0 ]] &&         ethtool -G "$iface" rx "$MAX_RX" tx "$MAX_RX" 2>/dev/null || true
+done
+
+# CPU governor
+for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+    echo "performance" > "$cpu" 2>/dev/null || true
+done
+
+# Disk read-ahead
+DISK=$(lsblk -d -o NAME,TYPE | awk '$2=="disk"{print $1}' | head -1)
+[[ -n "$DISK" ]] && blockdev --setra 8192 /dev/${DISK} 2>/dev/null || true
+
+# IRQ affinity
+for iface in $(ls /sys/class/net/ | grep -E '^(eth|ens|eno|enp|venet)'); do
+    IRQ_LIST=$(grep "${iface}" /proc/interrupts 2>/dev/null | awk -F: '{print $1}' | tr -d ' ')
+    CPU_COUNT=$(nproc)
+    CPU_MASK=1
+    for irq in $IRQ_LIST; do
+        echo "$CPU_MASK" > /proc/irq/${irq}/smp_affinity 2>/dev/null || true
+        CPU_MASK=$(( (CPU_MASK * 2) % (2**CPU_COUNT) ))
+        [[ $CPU_MASK -eq 0 ]] && CPU_MASK=1
+    done
+done
+BOOTSCRIPT2
 
 success "Kernel tuning complete."
 fi # end DO_TUNING
