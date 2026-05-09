@@ -234,7 +234,7 @@ SUMMARY="User: $USERNAME\nDownloads: $DOWNLOAD_DIR\n\n"
 [[ $INSTALL_AB  -eq 1 ]] && SUMMARY+="✓ autobrr  :${AB_PORT}\n"
 [[ $INSTALL_JF  -eq 1 ]] && SUMMARY+="✓ Jellyfin  :${JF_PORT}\n"
 [[ $INSTALL_FB  -eq 1 ]] && SUMMARY+="✓ FileBrowser  :${FB_PORT}\n"
-[[ $DO_TUNING   -eq 1 ]] && SUMMARY+="✓ Kernel tuning (Jerry's stack)\n"
+[[ $DO_TUNING   -eq 1 ]] && SUMMARY+="✓ Kernel tuning (BBR + optimizations)\n"
 [[ $DO_SWAP     -eq 1 ]] && SUMMARY+="✓ 4GB swapfile\n"
 
 whiptail --yesno "$SUMMARY\nProceed with installation?" 22 65 \
@@ -1009,5 +1009,3 @@ echo -e "  ${YELLOW}⚠  Change passwords after first login!${NC}"
 echo ""
 echo -e "${GREEN}${BOLD}  Happy racing! 🏁${NC}"
 echo ""
-ENDOFSCRIPT
-echo "Done writing script"
