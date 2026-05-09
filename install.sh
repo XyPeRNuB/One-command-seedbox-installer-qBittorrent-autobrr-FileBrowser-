@@ -159,10 +159,27 @@ QBT_PORT="45000"
 
 if [[ $INSTALL_QBT -eq 1 ]]; then
     QBT_METHOD=$(whiptail --menu \
-        "qBittorrent install method:" 15 65 4 \
-        "apt"    "Debian/Ubuntu repos (stable, easy)" \
-        "static" "Latest static build (userdocs) — ARM64 + x86_64" \
+        "qBittorrent install method:" 15 65 2 \
+        "apt"    "Debian/Ubuntu repos (older, stable)" \
+        "static" "Specific version — static build (recommended)" \
         --title "qBittorrent — Install Method" 3>&1 1>&2 2>&3) || error "Cancelled."
+
+    if [[ "$QBT_METHOD" == "static" ]]; then
+        QBT_VER=$(whiptail --menu \
+            "Select qBittorrent version:\n(All versions support ARM64 + x86_64)" \
+            22 65 10 \
+            "4.6.7"  "qBittorrent 4.6.7  (recommended, stable)" \
+            "4.6.6"  "qBittorrent 4.6.6" \
+            "4.6.5"  "qBittorrent 4.6.5" \
+            "4.6.4"  "qBittorrent 4.6.4" \
+            "4.6.3"  "qBittorrent 4.6.3" \
+            "4.6.2"  "qBittorrent 4.6.2" \
+            "4.6.1"  "qBittorrent 4.6.1" \
+            "4.6.0"  "qBittorrent 4.6.0" \
+            "4.5.5"  "qBittorrent 4.5.5" \
+            "4.5.4"  "qBittorrent 4.5.4" \
+            --title "qBittorrent — Version" 3>&1 1>&2 2>&3) || error "Cancelled."
+    fi
 
     QBT_WEBUI_PORT=$(whiptail --inputbox \
         "qBittorrent WebUI port:" 10 50 "8080" \
@@ -210,8 +227,9 @@ if [[ $INSTALL_FB -eq 1 ]]; then
 fi
 
 # ── Confirm summary ──────────────────────────────────────────
+QBT_VER="${QBT_VER:-apt}"
 SUMMARY="User: $USERNAME\nDownloads: $DOWNLOAD_DIR\n\n"
-[[ $INSTALL_QBT -eq 1 ]] && SUMMARY+="✓ qBittorrent  WebUI :${QBT_WEBUI_PORT}  Peer :${QBT_PORT}\n"
+[[ $INSTALL_QBT -eq 1 ]] && SUMMARY+="✓ qBittorrent v${QBT_VER}  WebUI :${QBT_WEBUI_PORT}  Peer :${QBT_PORT}\n"
 [[ $INSTALL_RT  -eq 1 ]] && SUMMARY+="✓ rTorrent + ruTorrent  :${RT_PORT}\n"
 [[ $INSTALL_AB  -eq 1 ]] && SUMMARY+="✓ autobrr  :${AB_PORT}\n"
 [[ $INSTALL_JF  -eq 1 ]] && SUMMARY+="✓ Jellyfin  :${JF_PORT}\n"
@@ -525,10 +543,21 @@ section "qBittorrent-nox"
 
 _install_qbt() {
     if [[ "$QBT_METHOD" == "static" ]]; then
-        QB_RELEASE=$(curl -sL \
-            "https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest" \
-            | grep '"tag_name"' | cut -d'"' -f4)
-        QB_URL="https://github.com/userdocs/qbittorrent-nox-static/releases/download/${QB_RELEASE}/${QB_ARCH}-qbittorrent-nox"
+        # Find the release tag matching chosen version from userdocs
+        QB_TAG=$(curl -sL \
+            "https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases?per_page=50" \
+            | grep '"tag_name"' \
+            | grep "release-${QBT_VER}_" \
+            | head -1 \
+            | cut -d'"' -f4)
+        # Fallback to latest if specific version not found
+        if [[ -z "$QB_TAG" ]]; then
+            QB_TAG=$(curl -sL \
+                "https://api.github.com/repos/userdocs/qbittorrent-nox-static/releases/latest" \
+                | grep '"tag_name"' | cut -d'"' -f4)
+            warn "Version ${QBT_VER} not found, using latest: $QB_TAG"
+        fi
+        QB_URL="https://github.com/userdocs/qbittorrent-nox-static/releases/download/${QB_TAG}/${QB_ARCH}-qbittorrent-nox"
         curl -sL "$QB_URL" -o /usr/local/bin/qbittorrent-nox
         chmod +x /usr/local/bin/qbittorrent-nox
     else
