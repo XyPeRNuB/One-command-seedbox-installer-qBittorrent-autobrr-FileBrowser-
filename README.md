@@ -14,7 +14,7 @@
 A modular, interactive seedbox installer for Debian/Ubuntu with full kernel-level tuning baked in.
 
 [![OS](https://img.shields.io/badge/OS-Debian%2011%2F12%20%7C%20Ubuntu%2020.04%2B-blue?style=flat-square)](https://debian.org)
-[![Arch](https://img.shields.io/badge/Arch-ARM64%20%7C%20x86__64-green?style=flat-square)](https://github.com/XyPeRNuB/masum-seedbox)
+[![Arch](https://img.shields.io/badge/Arch-ARM64%20%7C%20x86__64-green?style=flat-square)](https://github.com/XyPeRNuB/mamu_tuning)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 </div>
@@ -24,13 +24,13 @@ A modular, interactive seedbox installer for Debian/Ubuntu with full kernel-leve
 ## 🚀 Quick Install
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/masum-seedbox/main/install.sh)
+bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/mamu_tuning/main/install.sh)
 ```
 
 Or with wget:
 
 ```bash
-bash <(wget -qO- https://raw.githubusercontent.com/XyPeRNuB/masum-seedbox/main/install.sh)
+bash <(wget -qO- https://raw.githubusercontent.com/XyPeRNuB/mamu_tuning/main/install.sh)
 ```
 
 > Run as **root**. Supports Debian 11/12 and Ubuntu 20.04/22.04/24.04 on both ARM64 and x86_64.
@@ -175,7 +175,7 @@ Safe to run multiple times. Already installed apps are detected automatically an
 
 ```bash
 # Run again to add more apps
-bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/masum-seedbox/main/install.sh)
+bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/mamu_tuning/main/install.sh)
 ```
 
 ---
@@ -192,7 +192,15 @@ bash <(curl -sL https://raw.githubusercontent.com/XyPeRNuB/masum-seedbox/main/in
 /etc/filebrowser/                   ← FileBrowser config
 ```
 
+---
 
+## 🙏 Credits
+
+- Kernel tuning approach inspired by [jerry048/Dedicated-Seedbox](https://github.com/jerry048/Dedicated-Seedbox)
+- UI style inspired by [swizzin/swizzin](https://github.com/swizzin/swizzin)
+- qBittorrent static builds by [userdocs/qbittorrent-nox-static](https://github.com/userdocs/qbittorrent-nox-static)
+
+---
 
 <div align="center">
 Made with ❤️ by <a href="https://github.com/XyPeRNuB">XyPeRNuB</a> · Happy Racing 🏁
