@@ -871,7 +871,7 @@ _install_jellyfin() {
     # Add Jellyfin's signing key
     mkdir -p /etc/apt/keyrings
     curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key \
-        | gpg --dearmor -o /etc/apt/keyrings/jellyfin.gpg 2>/dev/null
+        | gpg --dearmor --yes -o /etc/apt/keyrings/jellyfin.gpg 2>/dev/null
 
     # Get OS info for repo
     OS_ID=$(awk -F= '/^ID=/{gsub(/"/,"",$2); print $2}' /etc/os-release)
