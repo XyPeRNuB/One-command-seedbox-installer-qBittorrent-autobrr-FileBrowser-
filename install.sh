@@ -76,12 +76,12 @@ clear
 echo -e "${CYAN}${BOLD}"
 cat << 'BANNER'
 
-██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
-██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
-██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
-██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
-╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
- ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝
+ ██╗      ██████╗ ██╗    ██╗     ██████╗ ██████╗ ██████╗ ████████╗██╗███████╗ ██████╗ ██╗     
+ ██║     ██╔═══██╗██║    ██║    ██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝██║██╔════╝██╔═══██╗██║     
+ ██║     ██║   ██║██║ █╗ ██║    ██║     ██║   ██║██████╔╝   ██║   ██║███████╗██║   ██║██║     
+ ██║     ██║   ██║██║███╗██║    ██║     ██║   ██║██╔══██╗   ██║   ██║╚════██║██║   ██║██║     
+ ███████╗╚██████╔╝╚███╔███╔╝    ╚██████╗╚██████╔╝██║  ██║   ██║   ██║███████║╚██████╔╝███████╗
+ ╚══════╝ ╚═════╝  ╚══╝╚══╝      ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝╚══════╝ ╚═════╝ ╚══════╝
 BANNER
 echo -e "${NC}"
 echo -e "${CYAN}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -91,7 +91,7 @@ echo ""
 echo -e "  ${DIM}OS: $PRETTY_NAME${NC}"
 echo -e "  ${DIM}Arch: $ARCH_LABEL  |  CPU: ${NCORES} cores  |  RAM: ${TOTAL_RAM_MB}MB${NC}"
 echo ""
-echo -e "  ${CYAN}Welcome to Mamu Seedbox Setup!${NC}"
+echo -e "  ${CYAN}Welcome to Low Cortisol Seedbox Setup!${NC}"
 echo -e "  ${DIM}This will install and configure your seedbox environment.${NC}"
 echo ""
 echo -ne "  ${BOLD}Press Enter to get started...${NC}"
@@ -104,33 +104,44 @@ clear
 # Username
 USERNAME=$(whiptail --inputbox \
     "Enter a username for your seedbox:" 10 60 "admin" \
-    --title "Mamu Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
 [[ -z "$USERNAME" ]] && error "Username cannot be empty."
 
 # Check if user already exists — skip password prompts if so
 PASSWORD=""
 if id "$USERNAME" &>/dev/null; then
     whiptail --msgbox "User '$USERNAME' already exists.\nSkipping password setup — using existing account." 10 60 \
-        --title "Mamu Seedbox — Existing User"
+        --title "Low Cortisol Seedbox — Existing User"
     USER_EXISTS=1
 else
     USER_EXISTS=0
     # Password
-    PASSWORD=$(whiptail --passwordbox \
-        "Enter a password:" 10 60 \
-        --title "Mamu Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
-    [[ -z "$PASSWORD" ]] && error "Password cannot be empty."
-
-    PASSWORD2=$(whiptail --passwordbox \
-        "Confirm password:" 10 60 \
-        --title "Mamu Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
-    [[ "$PASSWORD" != "$PASSWORD2" ]] && error "Passwords do not match."
+    while true; do
+        PASSWORD=$(whiptail --passwordbox \
+            "Enter a password (minimum 12 characters):" 10 60 \
+            --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+        [[ -z "$PASSWORD" ]] && error "Password cannot be empty."
+        if [[ ${#PASSWORD} -lt 12 ]]; then
+            whiptail --msgbox "Password must be at least 12 characters!\nYou entered ${#PASSWORD} characters." 10 50 \
+                --title "Password Too Short"
+            continue
+        fi
+        PASSWORD2=$(whiptail --passwordbox \
+            "Confirm password:" 10 60 \
+            --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+        if [[ "$PASSWORD" != "$PASSWORD2" ]]; then
+            whiptail --msgbox "Passwords do not match! Try again." 8 45 \
+                --title "Password Mismatch"
+            continue
+        fi
+        break
+    done
 fi
 
 # Download directory
 DOWNLOAD_DIR=$(whiptail --inputbox \
     "Download directory:" 10 60 "/home/${USERNAME}/downloads" \
-    --title "Mamu Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
 
 # ============================================================
 #  DETECT ALREADY INSTALLED APPS
@@ -170,7 +181,7 @@ APPS=$(whiptail --checklist \
     "filebrowser"  "$fb_label"                           OFF \
     "tuning"       "Kernel tuning (BBR + optimizations)" ON  \
     "swap"         "Create 4GB swapfile"                 ON  \
-    --title "Mamu Seedbox — Apps" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Low Cortisol Seedbox — Apps" 3>&1 1>&2 2>&3) || error "Cancelled."
 
 # Parse selections
 INSTALL_QBT=0; INSTALL_RT=0; INSTALL_AB=0
@@ -194,7 +205,7 @@ INSTALL_JF=0; INSTALL_FB=0; DO_TUNING=0; DO_SWAP=0
 # ── Nothing selected ─────────────────────────────────────────
 if [[ $INSTALL_QBT -eq 0 && $INSTALL_RT -eq 0 && $INSTALL_AB -eq 0 && \
       $INSTALL_JF -eq 0 && $INSTALL_FB -eq 0 && $DO_TUNING -eq 0 ]]; then
-    whiptail --msgbox "Nothing new to install. Exiting." 8 45 --title "Mamu Seedbox"
+    whiptail --msgbox "Nothing new to install. Exiting." 8 45 --title "Low Cortisol Seedbox"
     exit 0
 fi
 
@@ -286,7 +297,7 @@ SUMMARY="User: $USERNAME\nDownloads: $DOWNLOAD_DIR\n\n"
 [[ $DO_SWAP     -eq 1 ]] && SUMMARY+="✓ 4GB swapfile\n"
 
 whiptail --yesno "$SUMMARY\nProceed with installation?" 22 65 \
-    --title "Mamu Seedbox — Confirm" --yes-button "Install" --no-button "Cancel" \
+    --title "Low Cortisol Seedbox — Confirm" --yes-button "Install" --no-button "Cancel" \
     3>&1 1>&2 2>&3 || { echo "Aborted."; exit 0; }
 
 # ============================================================
@@ -373,7 +384,7 @@ if [[ $DO_SWAP -eq 1 ]]; then
 fi
 
 # ── Kernel modules ───────────────────────────────────────────
-modprobe tcp_bbr    2>/dev/null || true
+modprobe tcp_bbr      2>/dev/null || true
 modprobe nf_conntrack 2>/dev/null || true
 echo "tcp_bbr"      > /etc/modules-load.d/bbr.conf
 echo "nf_conntrack" > /etc/modules-load.d/conntrack.conf
@@ -391,79 +402,80 @@ sed -i '/@include/d' /etc/sysctl.conf 2>/dev/null || true
 # ── sysctl — Jerry048's exact kernel tuning stack ────────────
 _apply_sysctl() {
 cat > /etc/sysctl.d/99-seedbox.conf << 'SYSCTL'
-# ── Kernel ────────────────────────────────────────────────
+# ── Kernel ────────────────────────────────────────────────────
 kernel.pid_max = 4194303
-kernel.msgmnb = 65536
-kernel.msgmax = 65536
 kernel.sched_migration_cost_ns = 5000000
 kernel.sched_autogroup_enabled = 0
 kernel.sched_min_granularity_ns = 10000000
 kernel.sched_wakeup_granularity_ns = 15000000
 
-# ── File system ───────────────────────────────────────────
-fs.file-max = 1048576
-fs.nr_open = 1048576
+# ── File system ───────────────────────────────────────────────
+fs.file-max = 2097152
+fs.nr_open = 2097152
 
-# ── Memory ────────────────────────────────────────────────
+# ── Memory ────────────────────────────────────────────────────
+vm.swappiness = 10
 vm.dirty_background_ratio = 5
 vm.dirty_ratio = 30
 vm.dirty_expire_centisecs = 1000
 vm.dirty_writeback_centisecs = 100
-vm.swappiness = 10
+vm.vfs_cache_pressure = 50
 
-# ── Network core ──────────────────────────────────────────
+# ── Network core ──────────────────────────────────────────────
+net.core.rmem_default = 524288
+net.core.rmem_max = 134217728
+net.core.wmem_default = 524288
+net.core.wmem_max = 134217728
+net.core.optmem_max = 4194304
+net.core.netdev_max_backlog = 100000
 net.core.netdev_budget = 50000
 net.core.netdev_budget_usecs = 8000
-net.core.netdev_max_backlog = 100000
-net.core.rmem_default = 262144
-net.core.rmem_max = 67108864
-net.core.wmem_default = 16384
-net.core.wmem_max = 67108864
-net.core.optmem_max = 4194304
 net.core.somaxconn = 524288
 
-# ── BBR + FQ ──────────────────────────────────────────────
+# ── BBR + FQ ──────────────────────────────────────────────────
 net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
 
-# ── TCP ───────────────────────────────────────────────────
-net.ipv4.ip_local_port_range = 1024 65535
-net.ipv4.tcp_max_syn_backlog = 524288
-net.ipv4.tcp_max_orphans = 262144
-net.ipv4.tcp_max_tw_buckets = 10240
-net.ipv4.tcp_mtu_probing = 2
-net.ipv4.tcp_base_mss = 1460
-net.ipv4.tcp_min_snd_mss = 536
-net.ipv4.tcp_sack = 1
-net.ipv4.tcp_comp_sack_delay_ns = 250000
-net.ipv4.tcp_dsack = 1
-net.ipv4.tcp_early_retrans = 3
-net.ipv4.tcp_ecn = 0
-net.ipv4.tcp_mem = 253962 507925 1015851
-net.ipv4.tcp_rmem = 8192 262144 67108864
-net.ipv4.tcp_wmem = 4096 16384 67108864
+# ── TCP buffers ───────────────────────────────────────────────
+net.ipv4.tcp_rmem = 4096 524288 134217728
+net.ipv4.tcp_wmem = 4096 524288 134217728
 net.ipv4.tcp_moderate_rcvbuf = 1
-net.ipv4.tcp_adv_win_scale = 1
-net.ipv4.tcp_reordering = 10
-net.ipv4.tcp_max_reordering = 600
-net.ipv4.tcp_keepalive_time = 7200
-net.ipv4.tcp_keepalive_probes = 15
-net.ipv4.tcp_keepalive_intvl = 60
-net.ipv4.tcp_retries1 = 3
-net.ipv4.tcp_retries2 = 10
-net.ipv4.tcp_orphan_retries = 2
+net.ipv4.tcp_adv_win_scale = -2
+
+# ── TCP performance ───────────────────────────────────────────
+net.ipv4.tcp_notsent_lowat = 16384
+net.ipv4.tcp_limit_output_bytes = 1048576
 net.ipv4.tcp_autocorking = 0
-net.ipv4.tcp_frto = 0
-net.ipv4.tcp_rfc1337 = 1
-net.ipv4.tcp_slow_start_after_idle = 0
 net.ipv4.tcp_fastopen = 3
 net.ipv4.tcp_timestamps = 0
-net.ipv4.tcp_fin_timeout = 5
-net.ipv4.tcp_no_metrics_save = 1
-net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_dsack = 1
+net.ipv4.tcp_early_retrans = 3
+net.ipv4.tcp_mtu_probing = 1
 net.ipv4.tcp_window_scaling = 1
-net.ipv4.tcp_notsent_lowat = 131072
-net.ipv4.tcp_limit_output_bytes = 3276800
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 10
+net.ipv4.tcp_slow_start_after_idle = 0
+net.ipv4.tcp_max_syn_backlog = 524288
+net.ipv4.tcp_max_tw_buckets = 10240
+net.ipv4.tcp_max_orphans = 262144
+net.ipv4.tcp_reordering = 10
+net.ipv4.tcp_max_reordering = 300
+net.ipv4.tcp_rfc1337 = 1
+net.ipv4.tcp_frto = 0
+net.ipv4.tcp_ecn = 0
+net.ipv4.tcp_comp_sack_delay_ns = 250000
+net.ipv4.tcp_no_metrics_save = 1
+net.ipv4.ip_local_port_range = 1024 65535
+
+# ── UDP ───────────────────────────────────────────────────────
+net.ipv4.udp_rmem_min = 8192
+net.ipv4.udp_wmem_min = 8192
+
+# ── Conntrack ─────────────────────────────────────────────────
+net.netfilter.nf_conntrack_max = 1048576
+net.netfilter.nf_conntrack_tcp_timeout_established = 600
+net.netfilter.nf_conntrack_tcp_timeout_time_wait = 10
 SYSCTL
 
     # Patch Netcup's sysctl override if present
@@ -970,7 +982,7 @@ echo -e "${GREEN}${BOLD}"
 cat << 'DONE'
 
   ╔══════════════════════════════════════════╗
-  ║   Mamu Seedbox — Installation Complete  ║
+  ║   Low Cortisol — Installation Complete  ║
   ╚══════════════════════════════════════════╝
 
 DONE
@@ -1028,5 +1040,5 @@ fi
 echo -e "  ${YELLOW}⚠  Reboot recommended to apply all tuning.${NC}"
 echo -e "  ${YELLOW}⚠  Change passwords after first login!${NC}"
 echo ""
-echo -e "${GREEN}${BOLD}  Happy racing! 🏁${NC}"
+echo -e "${GREEN}${BOLD}  Happy Racing! 🏁 — Low Cortisol${NC}"
 echo ""
