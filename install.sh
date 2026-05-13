@@ -104,7 +104,7 @@ clear
 # Username
 USERNAME=$(whiptail --inputbox \
     "Enter a username for your seedbox:" 10 60 "admin" \
-    --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 [[ -z "$USERNAME" ]] && error "Username cannot be empty."
 
 # Check if user already exists — skip password prompts if so
@@ -119,7 +119,7 @@ else
     while true; do
         PASSWORD=$(whiptail --passwordbox \
             "Enter a password (minimum 12 characters):" 10 60 \
-            --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+            --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
         [[ -z "$PASSWORD" ]] && error "Password cannot be empty."
         if [[ ${#PASSWORD} -lt 12 ]]; then
             whiptail --msgbox "Password must be at least 12 characters!\nYou entered ${#PASSWORD} characters." 10 50 \
@@ -128,7 +128,7 @@ else
         fi
         PASSWORD2=$(whiptail --passwordbox \
             "Confirm password:" 10 60 \
-            --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+            --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
         if [[ "$PASSWORD" != "$PASSWORD2" ]]; then
             whiptail --msgbox "Passwords do not match! Try again." 8 45 \
                 --title "Password Mismatch"
@@ -141,7 +141,7 @@ fi
 # Download directory
 DOWNLOAD_DIR=$(whiptail --inputbox \
     "Download directory:" 10 60 "/home/${USERNAME}/downloads" \
-    --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 
 # ============================================================
 #  MODE SELECTION — Install or Uninstall
@@ -159,7 +159,7 @@ ANYTHING_INSTALLED=$(( QBT_INSTALLED + RT_INSTALLED + AB_INSTALLED + JF_INSTALLE
 
 MODE="install"
 if [[ $ANYTHING_INSTALLED -gt 0 ]]; then
-    MODE=$(whiptail --menu         "What do you want to do?" 12 55 2         "install"   "Install / Add new apps"         "uninstall" "Uninstall / Remove apps"         --title "Mamu Seedbox — Mode" 3>&1 1>&2 2>&3) || error "Cancelled."
+    MODE=$(whiptail --menu         "What do you want to do?" 12 55 2         "install"   "Install / Add new apps"         "uninstall" "Uninstall / Remove apps"         --title "Mamu Seedbox — Mode" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 fi
 
 # ── Handle uninstall mode ─────────────────────────────────
@@ -172,7 +172,7 @@ if [[ "$MODE" == "uninstall" ]]; then
     [[ $JF_INSTALLED  -eq 1 ]] && UNINSTALL_OPTS+=""jellyfin"     "Jellyfin" OFF "
     [[ $FB_INSTALLED  -eq 1 ]] && UNINSTALL_OPTS+=""filebrowser"  "FileBrowser" OFF "
 
-    REMOVE=$(eval whiptail --checklist         '"Select apps to uninstall:"' 18 55 8         $UNINSTALL_OPTS         --title '"Mamu Seedbox — Uninstall"' 3>&1 1>&2 2>&3) || error "Cancelled."
+    REMOVE=$(eval whiptail --checklist         '"Select apps to uninstall:"' 18 55 8         $UNINSTALL_OPTS         --title '"Mamu Seedbox — Uninstall"' 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 
     [[ -z "$REMOVE" ]] && { whiptail --msgbox "Nothing selected." 8 40; exit 0; }
 
@@ -280,7 +280,7 @@ APPS=$(whiptail --checklist \
     "filebrowser"  "$fb_label"                           OFF \
     "tuning"       "Kernel tuning (BBR + optimizations)" ON  \
     "swap"         "Create 4GB swapfile"                 ON  \
-    --title "Mamu Tuning Seedbox — Apps" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Mamu Tuning Seedbox — Apps" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 
 # Parse selections
 INSTALL_QBT=0; INSTALL_RT=0; INSTALL_AB=0
@@ -320,7 +320,7 @@ if [[ $INSTALL_QBT -eq 1 ]]; then
         "qBittorrent install method:" 15 65 2 \
         "apt"    "Debian/Ubuntu repos (older, stable)" \
         "static" "Specific version — static build (recommended)" \
-        --title "qBittorrent — Install Method" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "qBittorrent — Install Method" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 
     if [[ "$QBT_METHOD" == "static" ]]; then
         QBT_VER=$(whiptail --menu \
@@ -336,16 +336,16 @@ if [[ $INSTALL_QBT -eq 1 ]]; then
             "4.6.0"  "qBittorrent 4.6.0" \
             "4.5.5"  "qBittorrent 4.5.5" \
             "4.5.4"  "qBittorrent 4.5.4" \
-            --title "qBittorrent — Version" 3>&1 1>&2 2>&3) || error "Cancelled."
+            --title "qBittorrent — Version" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
     fi
 
     QBT_WEBUI_PORT=$(whiptail --inputbox \
         "qBittorrent WebUI port:" 10 50 "8080" \
-        --title "qBittorrent — Ports" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "qBittorrent — Ports" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 
     QBT_PORT=$(whiptail --inputbox \
         "qBittorrent peer/listen port:" 10 50 "45000" \
-        --title "qBittorrent — Ports" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "qBittorrent — Ports" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 fi
 
 # ── rTorrent ports ───────────────────────────────────────────
@@ -354,10 +354,10 @@ RT_PEER_PORT="49164"
 if [[ $INSTALL_RT -eq 1 ]]; then
     RT_PORT=$(whiptail --inputbox \
         "ruTorrent web port:" 10 50 "8090" \
-        --title "rTorrent — Ports" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "rTorrent — Ports" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
     RT_PEER_PORT=$(whiptail --inputbox \
         "rTorrent peer port:" 10 50 "49164" \
-        --title "rTorrent — Ports" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "rTorrent — Ports" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 fi
 
 # ── autobrr port ─────────────────────────────────────────────
@@ -365,7 +365,7 @@ AB_PORT="7474"
 if [[ $INSTALL_AB -eq 1 ]]; then
     AB_PORT=$(whiptail --inputbox \
         "autobrr port:" 10 50 "7474" \
-        --title "autobrr — Port" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "autobrr — Port" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 fi
 
 # ── Jellyfin port ────────────────────────────────────────────
@@ -373,7 +373,7 @@ JF_PORT="8096"
 if [[ $INSTALL_JF -eq 1 ]]; then
     JF_PORT=$(whiptail --inputbox \
         "Jellyfin port:" 10 50 "8096" \
-        --title "Jellyfin — Port" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "Jellyfin — Port" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 fi
 
 # ── FileBrowser port ─────────────────────────────────────────
@@ -381,7 +381,7 @@ FB_PORT="8888"
 if [[ $INSTALL_FB -eq 1 ]]; then
     FB_PORT=$(whiptail --inputbox \
         "FileBrowser port:" 10 50 "8888" \
-        --title "FileBrowser — Port" 3>&1 1>&2 2>&3) || error "Cancelled."
+        --title "FileBrowser — Port" 3>&1 1>&2 2>&3) || { clear; echo "Cancelled."; exit 0; }
 fi
 
 # ── Confirm summary ──────────────────────────────────────────
