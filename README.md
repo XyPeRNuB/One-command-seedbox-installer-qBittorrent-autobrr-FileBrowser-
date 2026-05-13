@@ -1,17 +1,17 @@
 <div align="center">
 
 ```
-██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
-██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
-██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
-██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
-╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
- ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝
+ ███╗   ███╗ █████╗ ███╗   ███╗██╗   ██╗    ████████╗██╗   ██╗███╗   ██╗██╗███╗   ██╗ ██████╗
+ ████╗ ████║██╔══██╗████╗ ████║██║   ██║    ╚══██╔══╝██║   ██║████╗  ██║██║████╗  ██║██╔════╝
+ ██╔████╔██║███████║██╔████╔██║██║   ██║       ██║   ██║   ██║██╔██╗ ██║██║██╔██╗ ██║██║  ███╗
+ ██║╚██╔╝██║██╔══██║██║╚██╔╝██║██║   ██║       ██║   ██║   ██║██║╚██╗██║██║██║╚██╗██║██║   ██║
+ ██║ ╚═╝ ██║██║  ██║██║ ╚═╝ ██║╚██████╔╝       ██║   ╚██████╔╝██║ ╚████║██║██║ ╚████║╚██████╔╝
+ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝        ╚═╝    ╚═════╝ ╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝
 ```
 
 **Seedbox Installer v2.0**
 
-A clean, interactive seedbox installer for Debian/Ubuntu with proven kernel tuning and pre-configured qBittorrent for private tracker racing.
+A clean, interactive seedbox installer for Debian/Ubuntu with kernel tuning and pre-configured qBittorrent optimized for private tracker racing. Features install/uninstall support and swizzin-style UI.
 
 [![OS](https://img.shields.io/badge/OS-Debian%2011%2F12%20%7C%20Ubuntu%2020.04%2B-blue?style=flat-square)](https://debian.org)
 [![Arch](https://img.shields.io/badge/Arch-ARM64%20%7C%20x86__64-green?style=flat-square)](https://github.com/XyPeRNuB/mamu_tuning)
@@ -73,6 +73,17 @@ Interactive whiptail UI — like swizzin. Navigate with arrow keys, Space to sel
 │  ( ) 4.6.2                                                  │
 │  ( ) 4.5.5                                                  │
 │  ( ) 4.5.4                                                  │
+│                                                             │
+│               <OK>              <Cancel>                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                 What do you want to do?                     │
+│                                                             │
+│  (*) Install / Add new apps                                 │
+│  ( ) Uninstall / Remove apps                               │
 │                                                             │
 │               <OK>              <Cancel>                    │
 └─────────────────────────────────────────────────────────────┘
