@@ -76,12 +76,11 @@ clear
 echo -e "${CYAN}${BOLD}"
 cat << 'BANNER'
 
- ██╗      ██████╗ ██╗    ██╗     ██████╗ ██████╗ ██████╗ ████████╗██╗███████╗ ██████╗ ██╗     
- ██║     ██╔═══██╗██║    ██║    ██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝██║██╔════╝██╔═══██╗██║     
- ██║     ██║   ██║██║ █╗ ██║    ██║     ██║   ██║██████╔╝   ██║   ██║███████╗██║   ██║██║     
- ██║     ██║   ██║██║███╗██║    ██║     ██║   ██║██╔══██╗   ██║   ██║╚════██║██║   ██║██║     
- ███████╗╚██████╔╝╚███╔███╔╝    ╚██████╗╚██████╔╝██║  ██║   ██║   ██║███████║╚██████╔╝███████╗
- ╚══════╝ ╚═════╝  ╚══╝╚══╝      ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝╚══════╝ ╚═════╝ ╚══════╝
+  __  __                     _____            _             
+ |  \/  |__ _ _ __  _  _   |_   _|  _ _ _  (_)_ _  __ _ 
+ | |\/| / _` | '  \| || |    | || || | ' \ | | ' \/ _` |
+ |_|  |_\__,_|_|_|_|\_,_|    |_| \_,_|_||_||_|_||_\__, |
+                                                     |___/ 
 BANNER
 echo -e "${NC}"
 echo -e "${CYAN}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -91,7 +90,7 @@ echo ""
 echo -e "  ${DIM}OS: $PRETTY_NAME${NC}"
 echo -e "  ${DIM}Arch: $ARCH_LABEL  |  CPU: ${NCORES} cores  |  RAM: ${TOTAL_RAM_MB}MB${NC}"
 echo ""
-echo -e "  ${CYAN}Welcome to Low Cortisol Seedbox Setup!${NC}"
+echo -e "  ${CYAN}Welcome to Mamu Tuning Seedbox Setup!${NC}"
 echo -e "  ${DIM}This will install and configure your seedbox environment.${NC}"
 echo ""
 echo -ne "  ${BOLD}Press Enter to get started...${NC}"
@@ -104,14 +103,14 @@ clear
 # Username
 USERNAME=$(whiptail --inputbox \
     "Enter a username for your seedbox:" 10 60 "admin" \
-    --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
 [[ -z "$USERNAME" ]] && error "Username cannot be empty."
 
 # Check if user already exists — skip password prompts if so
 PASSWORD=""
 if id "$USERNAME" &>/dev/null; then
     whiptail --msgbox "User '$USERNAME' already exists.\nSkipping password setup — using existing account." 10 60 \
-        --title "Low Cortisol Seedbox — Existing User"
+        --title "Mamu Tuning Seedbox — Existing User"
     USER_EXISTS=1
 else
     USER_EXISTS=0
@@ -119,7 +118,7 @@ else
     while true; do
         PASSWORD=$(whiptail --passwordbox \
             "Enter a password (minimum 12 characters):" 10 60 \
-            --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+            --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
         [[ -z "$PASSWORD" ]] && error "Password cannot be empty."
         if [[ ${#PASSWORD} -lt 12 ]]; then
             whiptail --msgbox "Password must be at least 12 characters!\nYou entered ${#PASSWORD} characters." 10 50 \
@@ -128,7 +127,7 @@ else
         fi
         PASSWORD2=$(whiptail --passwordbox \
             "Confirm password:" 10 60 \
-            --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+            --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
         if [[ "$PASSWORD" != "$PASSWORD2" ]]; then
             whiptail --msgbox "Passwords do not match! Try again." 8 45 \
                 --title "Password Mismatch"
@@ -141,7 +140,106 @@ fi
 # Download directory
 DOWNLOAD_DIR=$(whiptail --inputbox \
     "Download directory:" 10 60 "/home/${USERNAME}/downloads" \
-    --title "Low Cortisol Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Mamu Tuning Seedbox — Setup" 3>&1 1>&2 2>&3) || error "Cancelled."
+
+# ============================================================
+#  MODE SELECTION — Install or Uninstall
+# ============================================================
+# Check if anything is installed first
+QBT_INSTALLED=0; RT_INSTALLED=0; AB_INSTALLED=0
+JF_INSTALLED=0; FB_INSTALLED=0
+command -v qbittorrent-nox &>/dev/null && QBT_INSTALLED=1
+command -v rtorrent &>/dev/null        && RT_INSTALLED=1
+command -v autobrr &>/dev/null         && AB_INSTALLED=1
+systemctl is-active --quiet jellyfin 2>/dev/null && JF_INSTALLED=1
+command -v filebrowser &>/dev/null     && FB_INSTALLED=1
+
+ANYTHING_INSTALLED=$(( QBT_INSTALLED + RT_INSTALLED + AB_INSTALLED + JF_INSTALLED + FB_INSTALLED ))
+
+MODE="install"
+if [[ $ANYTHING_INSTALLED -gt 0 ]]; then
+    MODE=$(whiptail --menu         "What do you want to do?" 12 55 2         "install"   "Install / Add new apps"         "uninstall" "Uninstall / Remove apps"         --title "Mamu Seedbox — Mode" 3>&1 1>&2 2>&3) || error "Cancelled."
+fi
+
+# ── Handle uninstall mode ─────────────────────────────────
+if [[ "$MODE" == "uninstall" ]]; then
+    # Build checklist of installed apps only
+    UNINSTALL_OPTS=""
+    [[ $QBT_INSTALLED -eq 1 ]] && UNINSTALL_OPTS+=""qbittorrent" "qBittorrent-nox" OFF "
+    [[ $RT_INSTALLED  -eq 1 ]] && UNINSTALL_OPTS+=""rtorrent"     "rTorrent + ruTorrent" OFF "
+    [[ $AB_INSTALLED  -eq 1 ]] && UNINSTALL_OPTS+=""autobrr"      "autobrr" OFF "
+    [[ $JF_INSTALLED  -eq 1 ]] && UNINSTALL_OPTS+=""jellyfin"     "Jellyfin" OFF "
+    [[ $FB_INSTALLED  -eq 1 ]] && UNINSTALL_OPTS+=""filebrowser"  "FileBrowser" OFF "
+
+    REMOVE=$(eval whiptail --checklist         '"Select apps to uninstall:"' 18 55 8         $UNINSTALL_OPTS         --title '"Mamu Seedbox — Uninstall"' 3>&1 1>&2 2>&3) || error "Cancelled."
+
+    [[ -z "$REMOVE" ]] && { whiptail --msgbox "Nothing selected." 8 40; exit 0; }
+
+    # Confirm
+    whiptail --yesno "Are you sure you want to uninstall the selected apps?
+This cannot be undone." 10 55         --title "Confirm Uninstall" --yes-button "Uninstall" --no-button "Cancel"         3>&1 1>&2 2>&3 || exit 0
+
+    clear
+    echo -e "
+${BOLD}${RED}  Uninstalling selected apps...${NC}
+"
+
+    if [[ "$REMOVE" == *"qbittorrent"* ]]; then
+        info "Removing qBittorrent..."
+        systemctl stop "qbittorrent-nox@${USERNAME}" 2>/dev/null || true
+        systemctl disable "qbittorrent-nox@${USERNAME}" 2>/dev/null || true
+        rm -f /etc/systemd/system/qbittorrent-nox@.service
+        rm -f /usr/local/bin/qbittorrent-nox
+        apt-get remove -y -qq qbittorrent-nox 2>/dev/null || true
+        success "qBittorrent removed."
+    fi
+
+    if [[ "$REMOVE" == *"rtorrent"* ]]; then
+        info "Removing rTorrent + ruTorrent..."
+        systemctl stop "rtorrent@${USERNAME}" 2>/dev/null || true
+        systemctl disable "rtorrent@${USERNAME}" 2>/dev/null || true
+        rm -f /etc/systemd/system/rtorrent@.service
+        apt-get remove -y -qq rtorrent 2>/dev/null || true
+        rm -rf /var/www/rutorrent
+        rm -f /etc/nginx/sites-enabled/rutorrent
+        rm -f /etc/nginx/sites-available/rutorrent
+        systemctl restart nginx 2>/dev/null || true
+        success "rTorrent + ruTorrent removed."
+    fi
+
+    if [[ "$REMOVE" == *"autobrr"* ]]; then
+        info "Removing autobrr..."
+        systemctl stop "autobrr@${USERNAME}" 2>/dev/null || true
+        systemctl disable "autobrr@${USERNAME}" 2>/dev/null || true
+        rm -f /etc/systemd/system/autobrr@.service
+        rm -f /usr/local/bin/autobrr /usr/local/bin/autobrrd
+        success "autobrr removed."
+    fi
+
+    if [[ "$REMOVE" == *"jellyfin"* ]]; then
+        info "Removing Jellyfin..."
+        systemctl stop jellyfin 2>/dev/null || true
+        systemctl disable jellyfin 2>/dev/null || true
+        apt-get remove -y -qq jellyfin jellyfin-server jellyfin-web 2>/dev/null || true
+        rm -f /etc/apt/sources.list.d/jellyfin.sources
+        success "Jellyfin removed."
+    fi
+
+    if [[ "$REMOVE" == *"filebrowser"* ]]; then
+        info "Removing FileBrowser..."
+        systemctl stop filebrowser 2>/dev/null || true
+        systemctl disable filebrowser 2>/dev/null || true
+        rm -f /etc/systemd/system/filebrowser.service
+        rm -f /usr/local/bin/filebrowser
+        rm -rf /etc/filebrowser
+        success "FileBrowser removed."
+    fi
+
+    systemctl daemon-reload
+    echo ""
+    success "Uninstall complete!"
+    exit 0
+fi
 
 # ============================================================
 #  DETECT ALREADY INSTALLED APPS
@@ -181,7 +279,7 @@ APPS=$(whiptail --checklist \
     "filebrowser"  "$fb_label"                           OFF \
     "tuning"       "Kernel tuning (BBR + optimizations)" ON  \
     "swap"         "Create 4GB swapfile"                 ON  \
-    --title "Low Cortisol Seedbox — Apps" 3>&1 1>&2 2>&3) || error "Cancelled."
+    --title "Mamu Tuning Seedbox — Apps" 3>&1 1>&2 2>&3) || error "Cancelled."
 
 # Parse selections
 INSTALL_QBT=0; INSTALL_RT=0; INSTALL_AB=0
@@ -205,7 +303,7 @@ INSTALL_JF=0; INSTALL_FB=0; DO_TUNING=0; DO_SWAP=0
 # ── Nothing selected ─────────────────────────────────────────
 if [[ $INSTALL_QBT -eq 0 && $INSTALL_RT -eq 0 && $INSTALL_AB -eq 0 && \
       $INSTALL_JF -eq 0 && $INSTALL_FB -eq 0 && $DO_TUNING -eq 0 ]]; then
-    whiptail --msgbox "Nothing new to install. Exiting." 8 45 --title "Low Cortisol Seedbox"
+    whiptail --msgbox "Nothing new to install. Exiting." 8 45 --title "Mamu Tuning Seedbox"
     exit 0
 fi
 
@@ -297,7 +395,7 @@ SUMMARY="User: $USERNAME\nDownloads: $DOWNLOAD_DIR\n\n"
 [[ $DO_SWAP     -eq 1 ]] && SUMMARY+="✓ 4GB swapfile\n"
 
 whiptail --yesno "$SUMMARY\nProceed with installation?" 22 65 \
-    --title "Low Cortisol Seedbox — Confirm" --yes-button "Install" --no-button "Cancel" \
+    --title "Mamu Tuning Seedbox — Confirm" --yes-button "Install" --no-button "Cancel" \
     3>&1 1>&2 2>&3 || { echo "Aborted."; exit 0; }
 
 # ============================================================
@@ -860,6 +958,17 @@ _install_autobrr() {
     rm -f /tmp/autobrr.tar.gz
 
     mkdir -p "/home/${USERNAME}/.config/autobrr"
+
+    # Write config with chosen port so it actually listens on the right port
+    cat > "/home/${USERNAME}/.config/autobrr/config.toml" << ABCONF
+host = "0.0.0.0"
+port = ${AB_PORT}
+log_level = "DEBUG"
+log_path = ""
+check_for_updates = true
+session_secret = "$(tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 32)"
+ABCONF
+
     chown -R "${USERNAME}:${USERNAME}" "/home/${USERNAME}/.config/autobrr"
 
     cat > /etc/systemd/system/autobrr@.service << ABSVC
@@ -982,7 +1091,7 @@ echo -e "${GREEN}${BOLD}"
 cat << 'DONE'
 
   ╔══════════════════════════════════════════╗
-  ║   Low Cortisol — Installation Complete  ║
+  ║   Mamu Tuning — Installation Complete  ║
   ╚══════════════════════════════════════════╝
 
 DONE
@@ -1040,5 +1149,5 @@ fi
 echo -e "  ${YELLOW}⚠  Reboot recommended to apply all tuning.${NC}"
 echo -e "  ${YELLOW}⚠  Change passwords after first login!${NC}"
 echo ""
-echo -e "${GREEN}${BOLD}  Happy Racing! 🏁 — Low Cortisol${NC}"
+echo -e "${GREEN}${BOLD}  Happy Racing! 🏁 — Mamu Tuning${NC}"
 echo ""
