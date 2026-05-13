@@ -83,7 +83,7 @@ Interactive whiptail UI — like swizzin. Navigate with arrow keys, Space to sel
 │                 What do you want to do?                     │
 │                                                             │
 │  (*) Install / Add new apps                                 │
-│  ( ) Uninstall / Remove apps                               │
+│  ( ) Uninstall / Remove apps                                │   
 │                                                             │
 │               <OK>              <Cancel>                    │
 └─────────────────────────────────────────────────────────────┘
