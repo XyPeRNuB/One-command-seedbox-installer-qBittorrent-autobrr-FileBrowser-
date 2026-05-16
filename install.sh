@@ -124,29 +124,38 @@ USERNAME=$(whiptail --inputbox \
 [[ -z "$USERNAME" ]] && { whiptail --msgbox "Username cannot be empty!" 8 40; clear; exit 1; }
 
 # ============================================================
-#  SCREEN 3 — PASSWORD
+#  SCREEN 3 — PASSWORD (skip if user already exists)
 # ============================================================
-while true; do
-    PASSWORD=$(whiptail --passwordbox \
-        "Enter a password (minimum 12 characters):" 10 60 \
-        --title "Mamu Tuning — Setup" 3>&1 1>&2 2>&3)
-    [[ $? -ne 0 ]] && { clear; exit 0; }
-    if [[ ${#PASSWORD} -lt 12 ]]; then
-        whiptail --msgbox "Password must be at least 12 characters!\nYou entered ${#PASSWORD}." 10 50 \
-            --title "Password Too Short"
-        continue
-    fi
-    PASSWORD2=$(whiptail --passwordbox \
-        "Confirm password:" 10 60 \
-        --title "Mamu Tuning — Setup" 3>&1 1>&2 2>&3)
-    [[ $? -ne 0 ]] && { clear; exit 0; }
-    if [[ "$PASSWORD" != "$PASSWORD2" ]]; then
-        whiptail --msgbox "Passwords do not match! Try again." 8 45 \
-            --title "Password Mismatch"
-        continue
-    fi
-    break
-done
+PASSWORD=""
+USER_EXISTS=0
+id "$USERNAME" &>/dev/null && USER_EXISTS=1
+
+if [[ $USER_EXISTS -eq 1 ]]; then
+    whiptail --msgbox "User '$USERNAME' already exists.\nSkipping password setup — using existing account." 10 60 \
+        --title "Mamu Tuning — Existing User" 3>&1 1>&2 2>&3 || { clear; exit 0; }
+else
+    while true; do
+        PASSWORD=$(whiptail --passwordbox \
+            "Enter a password (minimum 12 characters):" 10 60 \
+            --title "Mamu Tuning — Setup" 3>&1 1>&2 2>&3)
+        [[ $? -ne 0 ]] && { clear; exit 0; }
+        if [[ ${#PASSWORD} -lt 12 ]]; then
+            whiptail --msgbox "Password must be at least 12 characters!\nYou entered ${#PASSWORD}." 10 50 \
+                --title "Password Too Short" 3>&1 1>&2 2>&3
+            continue
+        fi
+        PASSWORD2=$(whiptail --passwordbox \
+            "Confirm password:" 10 60 \
+            --title "Mamu Tuning — Setup" 3>&1 1>&2 2>&3)
+        [[ $? -ne 0 ]] && { clear; exit 0; }
+        if [[ "$PASSWORD" != "$PASSWORD2" ]]; then
+            whiptail --msgbox "Passwords do not match! Try again." 8 45 \
+                --title "Password Mismatch" 3>&1 1>&2 2>&3
+            continue
+        fi
+        break
+    done
+fi
 
 # ============================================================
 #  SCREEN 4 — INSTALL OR UNINSTALL
