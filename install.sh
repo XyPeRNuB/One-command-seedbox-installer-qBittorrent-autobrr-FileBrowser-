@@ -703,7 +703,7 @@ if [[ $INSTALL_QBT -eq 1 || $INSTALL_AB -eq 1 ]]; then
 
     # Static build uses userdocs static binaries, dynamic uses Jerry's build system
     if [[ "${QBT_BUILD:-static}" == "static" ]]; then
-        LIB_VER="v2.0.10"
+        LIB_VER="v2.0.11"
     fi
 
     CMD_FLAGS="-u $USERNAME -p $PASSWORD -c ${QBT_CACHE:-2048} -q $QBT_VER -l $LIB_VER $FLAG_B $FLAG_NET"
