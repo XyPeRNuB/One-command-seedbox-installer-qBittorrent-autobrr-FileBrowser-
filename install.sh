@@ -69,23 +69,8 @@ get_public_ip() {
 
 run_step() {
     local msg="$1" func="$2"
-    local spin=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
-    local i=0
-
-    # Run function in background
-    $func >> "$LOG_FILE" 2>&1 &
-    local pid=$!
-
-    # Spin while running
-    while kill -0 $pid 2>/dev/null; do
-        echo -ne "\r  ${CYAN}${spin[$i]}${NC}  $msg"
-        i=$(( (i+1) % ${#spin[@]} ))
-        sleep 0.1
-    done
-
-    # Check exit code
-    wait $pid
-    if [[ $? -eq 0 ]]; then
+    echo -ne "  ${CYAN}⬡${NC}  $msg..."
+    if $func >> "$LOG_FILE" 2>&1; then
         echo -e "\r  ${GREEN}✓${NC}  $msg                    "
     else
         echo -e "\r  ${YELLOW}!${NC}  $msg ${YELLOW}[check log]${NC}          "
