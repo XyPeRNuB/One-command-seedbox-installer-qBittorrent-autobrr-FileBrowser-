@@ -69,11 +69,26 @@ get_public_ip() {
 
 run_step() {
     local msg="$1" func="$2"
-    echo -ne "  ${DIM}⬡${NC}  $msg..."
-    if $func >> "$LOG_FILE" 2>&1; then
-        echo -e "\r  ${GREEN}✓${NC}  $msg"
+    local spin=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+    local i=0
+
+    # Run function in background
+    $func >> "$LOG_FILE" 2>&1 &
+    local pid=$!
+
+    # Spin while running
+    while kill -0 $pid 2>/dev/null; do
+        echo -ne "\r  ${CYAN}${spin[$i]}${NC}  $msg"
+        i=$(( (i+1) % ${#spin[@]} ))
+        sleep 0.1
+    done
+
+    # Check exit code
+    wait $pid
+    if [[ $? -eq 0 ]]; then
+        echo -e "\r  ${GREEN}✓${NC}  $msg                    "
     else
-        echo -e "\r  ${YELLOW}!${NC}  $msg ${YELLOW}[warnings - check log]${NC}"
+        echo -e "\r  ${YELLOW}!${NC}  $msg ${YELLOW}[check log]${NC}          "
     fi
 }
 
@@ -312,16 +327,20 @@ DO_TUNING=0; ENABLE_BBR3=0; DO_SWAP=0
 QBT_VER="4.6.7"
 if [[ $INSTALL_QBT -eq 1 && $QBT_INSTALLED -eq 0 ]]; then
     QBT_VER=$(whiptail --menu \
-        "Select qBittorrent version:" 18 55 8 \
-        "4.6.7" "4.6.7 (recommended)" \
-        "4.6.6" "4.6.6" \
-        "4.6.5" "4.6.5" \
-        "4.6.4" "4.6.4" \
-        "4.6.3" "4.6.3" \
-        "4.6.2" "4.6.2" \
-        "4.5.5" "4.5.5" \
-        "4.5.4" "4.5.4" \
-        --title "Mamu Tuning — qBittorrent" 3>&1 1>&2 2>&3) || QBT_VER="4.6.7"
+        "Select qBittorrent version:" 14 55 5 \
+        "4.6.7" "★ 4.6.7  (recommended, stable)" \
+        "4.6.6" "  4.6.6" \
+        "4.6.5" "  4.6.5" \
+        "4.6.4" "  4.6.4" \
+        "4.5.5" "  4.5.5  (legacy)" \
+        --title "Mamu Tuning — qBittorrent Version" 3>&1 1>&2 2>&3) || QBT_VER="4.6.7"
+
+    # Static vs dynamic build
+    QBT_BUILD=$(whiptail --menu \
+        "Select build type:" 12 60 2 \
+        "static"  "Static  — no system deps (recommended)" \
+        "dynamic" "Dynamic — uses system libtorrent" \
+        --title "Mamu Tuning — qBittorrent Build" 3>&1 1>&2 2>&3) || QBT_BUILD="static"
 
     while true; do
         QBT_CACHE=$(whiptail --inputbox \
@@ -678,6 +697,11 @@ if [[ $INSTALL_QBT -eq 1 || $INSTALL_AB -eq 1 ]]; then
     [[ $INSTALL_AB   -eq 1 ]] && FLAG_B="-b"
     [[ $ENABLE_BBR3  -eq 1 ]] && FLAG_NET="-3"
 
+    # Static build uses userdocs static binaries, dynamic uses Jerry's build system
+    if [[ "${QBT_BUILD:-static}" == "static" ]]; then
+        LIB_VER="v2.0.10"
+    fi
+
     CMD_FLAGS="-u $USERNAME -p $PASSWORD -c ${QBT_CACHE:-2048} -q $QBT_VER -l $LIB_VER $FLAG_B $FLAG_NET"
 
     info "Running seedbox installer..."
@@ -883,8 +907,7 @@ if [[ $INSTALL_QUI -eq 1 ]]; then
     echo -e "  ${MAGENTA}Qui Dashboard${NC}"
 
     _install_qui() {
-        QUI_URL="$(gh_asset_url "autobrr/qui" "linux.*(${ARCH_GH_RE}).*(deb|tar\.gz|tgz|zip)$" || true)"
-        [[ -z "${QUI_URL:-}" ]] && QUI_URL="$(gh_asset_url "autobrr/qui" "${ARCH_GH_RE}.*(deb|tar\.gz|tgz|zip)$" || true)"
+        QUI_URL=$(curl -fsSL             -H "Accept: application/vnd.github+json"             "https://api.github.com/repos/autobrr/qui/releases/latest"             | grep "browser_download_url"             | grep -i "linux"             | grep -i "$ARCH_TAG"             | grep -E '\.(deb|tar\.gz)"'             | cut -d'"' -f4 | head -1 || true)
         [[ -z "${QUI_URL:-}" ]] && { warn "Qui not found for $ARCH_TAG"; return 0; }
 
         TMPDIR="$(mktemp -d)"
